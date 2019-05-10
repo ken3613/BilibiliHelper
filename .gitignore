@@ -1,5 +1,4 @@
-/vendor/
-/tmp/
-config
-*.log
-.idea
+node_modules
+.cookies
+.config
+.env

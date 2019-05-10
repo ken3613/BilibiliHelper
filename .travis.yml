@@ -1,21 +1,28 @@
-language: php
+sudo: required
 
-matrix:
-    fast_finish: true
+language: bash
+services: docker
 
-    include:
-        - php: '5.6'
-        - php: '7.0'
-        - php: '7.1'
-        - php: '7.2'
-        - php: '7.3'
-        - php: 'nightly'
+before_install:
+  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 
-    allow_failures:
-        - php: '7.3'
-        - php: 'nightly'
-
-sudo: false
+install:
+  - sudo curl -L https://raw.githubusercontent.com/metowolf/docker-builder/master/scripts/publish.sh -o /usr/local/bin/docker-publish
+  - sudo chmod +x /usr/local/bin/docker-publish
 
 script:
-  - find -L . -name '*.php' -print0 | xargs -0 -n 1 -P 4 php -l
+  - |
+    (
+      set -Eeuo pipefail
+      set -x
+      docker build -t travis .
+      if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+        image_version=`cat package.json | grep 'version' | awk -F '"' '{print $4}'`
+        if [ ! "$TRAVIS_BRANCH" = "master" ]; then
+          image_version="${image_version}-dev"
+        fi
+        docker-publish travis metowolf/bilibilihelper:${image_version} 2
+      fi
+    )
+after_script:
+  - docker images

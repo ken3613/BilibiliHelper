@@ -1,13 +1,20 @@
-FROM metowolf/php:7.3.0-alpine
+FROM node:alpine
+
+LABEL maintainer="metowolf <i@i-meto.com>"
 
 ENV USERNAME=
 ENV PASSWORD=
-ENV ROOMID 3746256
+ENV ACCESS_TOKEN=
+ENV REFRESH_TOKEN=
+ENV ROOM_ID 3746256
+ENV DEBUG true
+ENV TZ Asia/Shanghai
 
-COPY . /app
 WORKDIR /app
+COPY package.json yarn.lock .yarnclean ./
+RUN apk add --no-cache tzdata \
+    && yarn \
+    && yarn cache clean
+COPY . .
 
-RUN cp config.example config && \
-    composer install
-
-ENTRYPOINT ["sh", "docker/entrypoint.sh"]
+CMD ["node", "index.js"]
